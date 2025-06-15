@@ -1,10 +1,12 @@
 
-import { getBookmarks, initDB } from '@/utils/bookmarkDB.ts';
+import { getBookmarks, removeBookmark } from '@/utils/bookmark';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,119 +17,152 @@ export default function BookmarksScreen() {
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Initialize DB only once when the component mounts
-  useEffect(() => {
+  const fetchBookmarks = async () => {
     try {
-      initDB(); // Should not be called on Web — assumed safe due to platform check in initDB()
+      setLoading(true);
+      const data = await getBookmarks();
+      setBookmarks(data);
     } catch (err) {
-      console.error('❌ Error initializing DB:', err);
-      Alert.alert('Database Error', 'Failed to initialize bookmarks database.');
+      console.error('❌ Error loading bookmarks:', err);
+      Alert.alert('Error', 'Could not load bookmarks');
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  };
 
-  // ✅ Fetch bookmarks when the screen/tab regains focus
+  const handleDelete = async (jobId: number) => {
+    try {
+      await removeBookmark(jobId);
+      await fetchBookmarks();
+      Alert.alert('🗑️ Removed', 'Job removed from bookmarks');
+    } catch (error) {
+      console.error('❌ Error removing bookmark:', error);
+      Alert.alert('Error', 'Could not remove bookmark');
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
-      let isActive = true;
-
-      const fetchBookmarks = async () => {
-        try {
-          setLoading(true);
-          const data = await getBookmarks();
-          if (isActive) {
-            setBookmarks(data);
-          }
-        } catch (err) {
-          console.error('❌ Error loading bookmarks:', err);
-          Alert.alert('Error', 'Could not load bookmarks');
-        } finally {
-          if (isActive) {
-            setLoading(false);
-          }
-        }
-      };
-
       fetchBookmarks();
-
-      // ✅ Cleanup to prevent state update if unmounted
-      return () => {
-        isActive = false;
-      };
     }, [])
   );
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0f172a" />
-        <Text>Loading Bookmarks...</Text>
-      </View>
+      <LinearGradient colors={['#6a11cb', '#2575fc']} style={styles.fullscreen}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text style={styles.loadingText}>Loading Bookmarks...</Text>
+        </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.heading}>🔖 Saved Bookmarked Jobs</Text>
-      {bookmarks.length === 0 ? (
-        <Text style={styles.noData}>No bookmarks yet 😔</Text>
-      ) : (
-        bookmarks.map((job, index) => {
-          let jobData: any;
+    <LinearGradient colors={['#6a11cb', '#2575fc']} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.heading}>🔖 Saved Bookmarked Jobs</Text>
 
-          try {
-            jobData = job.job_json ? JSON.parse(job.job_json) : job;
-          } catch (e) {
-            console.error('❌ Failed to parse bookmark JSON:', e);
-            return null;
-          }
-
-          return (
+        {bookmarks.length === 0 ? (
+          <Text style={styles.noData}>No bookmarks yet 😔</Text>
+        ) : (
+          bookmarks.map((job, index) => (
             <View key={index} style={styles.card}>
-              <Text style={styles.title}>{jobData.title}</Text>
-              <Text>📍 {jobData.primary_details?.Place ?? 'N/A'}</Text>
-              <Text>💰 {jobData.primary_details?.Salary ?? 'N/A'}</Text>
-              <Text>📞 {jobData.primary_details?.Phone ?? 'No contact provided'}</Text>
+              <View style={styles.cardHeader}>
+                <Text style={styles.title}>💼 {job.title}</Text>
+                <Pressable onPress={() => handleDelete(job.id)}>
+                  <Text style={styles.deleteIcon}>🗑️</Text>
+                </Pressable>
+              </View>
+
+              <LinearGradient colors={['#d0f0fd', '#a6e3f4']} style={styles.badge}>
+                <Text style={styles.badgeText}>📍 {job.primary_details?.Place ?? 'N/A'}</Text>
+              </LinearGradient>
+
+              <LinearGradient colors={['#d0f0fd', '#a6e3f4']} style={styles.badge}>
+                <Text style={styles.badgeText}>💰 {job.primary_details?.Salary ?? 'N/A'}</Text>
+              </LinearGradient>
+
+              <LinearGradient colors={['#d0f0fd', '#a6e3f4']} style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  📞 {job.primary_details?.Phone ?? 'No contact provided'}
+                </Text>
+              </LinearGradient>
             </View>
-          );
-        })
-      )}
-    </ScrollView>
+          ))
+        )}
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  fullscreen: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    padding: 50,
-    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    padding: 24,
   },
   heading: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1e293b',
+    marginBottom: 24,
+    color: '#ffffff',
+    textAlign: 'center',
   },
   card: {
-    backgroundColor: '#f8fafc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    elevation: 2,
+    backgroundColor: '#e6e6fa', // lavender
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+    elevation: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   title: {
+    fontSize: 18,
     fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 4,
-    color: '#0f172a',
+    color: '#4b0082',
+    flex: 1,
+    paddingRight: 12,
+  },
+  deleteIcon: {
+    fontSize: 20,
+    color: '#8b0000',
+  },
+  badge: {
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginVertical: 4,
+  },
+  badgeText: {
+    fontSize: 14,
+    color: '#1e3a5f',
+    fontWeight: '500',
   },
   noData: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#64748b',
+    color: '#e0e7ff',
+    marginTop: 60,
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#ffffff',
+  },
 });
+

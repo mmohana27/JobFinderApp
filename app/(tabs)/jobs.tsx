@@ -1,170 +1,18 @@
-/*import React, { useEffect, useState } from 'react';
-import {
-  FlatList,
-  Text,
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Pressable,
-  Platform,
-} from 'react-native';
+
 import axios from 'axios';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-
-type Job = {
-  id: number;
-  title: string;
-  primary_details: {
-    Place?: string;
-    Salary?: string;
-    Phone?: string;
-  };
-};
-
-export default function JobsScreen() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const router = useRouter();
-
-  const fetchJobs = async () => {
-    if (loading || !hasMore) return;
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://testapi.getlokalapp.com/common/jobs?page=${page}`
-      );
-      const newJobs: Job[] = response.data?.results ?? [];
-      if (newJobs.length === 0) setHasMore(false);
-      setJobs(prev => [...prev, ...newJobs]);
-      setPage(prev => prev + 1);
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  const renderItem = ({ item }: { item: Job }) => (
-    <Pressable
-      onPress={() => router.push(`/job-details/${item.id}`)}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-    >
-      <Text style={styles.title}>{item.title}</Text>
-
-      <View style={styles.detailRow}>
-        <Text style={styles.badge}>📍 {item.primary_details?.Place ?? 'Unknown'}</Text>
-        <Text style={styles.badge}>💰 {item.primary_details?.Salary ?? 'N/A'}</Text>
-      </View>
-
-      <Text style={styles.phone}>
-        📞 {item.primary_details?.Phone ?? 'No contact provided'}
-      </Text>
-    </Pressable>
-  );
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={jobs}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => (item?.id ? item.id.toString() : `job-${index}`)}
-        onEndReached={fetchJobs}
-        onEndReachedThreshold={0.4}
-        showsVerticalScrollIndicator={false}
-        ListFooterComponent={loading ? <ActivityIndicator size="large" color="#007AFF" /> : null}
-        ListEmptyComponent={
-          !loading && (
-            <Text style={styles.emptyText}>
-              🚫 No jobs available at the moment.
-            </Text>
-          )
-        }
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-
-  card: {
-    backgroundColor: '#f0f4f8',
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 14,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-
-  pressed: {
-    opacity: 0.8,
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-
-  badge: {
-    backgroundColor: '#e2e8f0',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    fontSize: 14,
-    color: '#334155',
-  },
-
-  phone: {
-    fontSize: 14,
-    marginTop: 6,
-    color: '#475569',
-  },
-
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 24,
-    fontSize: 16,
-    color: '#888',
-  },
-});
-*/
-// app/jobs.tsx
-
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
   Text,
   View,
-  StyleSheet,
-  ActivityIndicator,
-  Pressable,
-  Platform,
 } from 'react-native';
-import axios from 'axios';
-import { useRouter } from 'expo-router';
 
 type Job = {
   id: number;
@@ -216,23 +64,32 @@ export default function JobsScreen() {
           params: { job: JSON.stringify(item) },
         })
       }
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.cardWrapper, pressed && styles.pressed]}
     >
-      <Text style={styles.title}>{item.title}</Text>
+      <BlurView intensity={60} tint="light" style={styles.card}>
+        <Text style={styles.title}>💼 {item.title}</Text>
 
-      <View style={styles.detailRow}>
-        <Text style={styles.badge}>📍 {item.primary_details?.Place ?? 'Unknown'}</Text>
-        <Text style={styles.badge}>💰 {item.primary_details?.Salary ?? 'N/A'}</Text>
-      </View>
+        <View style={styles.detailRow}>
+          <LinearGradient colors={['#3b82f6', '#06b6d4']} style={styles.badge}>
+            <Text style={styles.badgeText}>📍 {item.primary_details?.Place ?? 'Unknown'}</Text>
+          </LinearGradient>
+          <LinearGradient colors={['#10b981', '#3b82f6']} style={styles.badge}>
+            <Text style={styles.badgeText}>💰 {item.primary_details?.Salary ?? 'N/A'}</Text>
+          </LinearGradient>
+        </View>
 
-      <Text style={styles.phone}>
-        📞 {item.primary_details?.Phone ?? 'No contact provided'}
-      </Text>
+        <Text style={styles.phone}>
+          📞 {item.primary_details?.Phone ?? 'No contact provided'}
+        </Text>
+      </BlurView>
     </Pressable>
   );
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#0f172a', '#1e293b']}
+      style={styles.background}
+    >
       <FlatList
         data={jobs}
         renderItem={renderItem}
@@ -240,7 +97,9 @@ export default function JobsScreen() {
         onEndReached={fetchJobs}
         onEndReachedThreshold={0.4}
         showsVerticalScrollIndicator={false}
-        ListFooterComponent={loading ? <ActivityIndicator size="large" color="#007AFF" /> : null}
+        ListFooterComponent={loading ? (
+          <ActivityIndicator size="large" color="#facc15" />
+        ) : null}
         ListEmptyComponent={
           !loading && (
             <Text style={styles.emptyText}>
@@ -248,59 +107,73 @@ export default function JobsScreen() {
             </Text>
           )
         }
+        contentContainerStyle={styles.listContainer}
       />
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  card: {
-    backgroundColor: '#f0f4f8',
-    padding: 18,
+  background: {
+    flex: 1,
+  },
+  listContainer: {
+    padding: 16,
+  },
+  cardWrapper: {
+    marginBottom: 18,
     borderRadius: 16,
-    marginBottom: 14,
+    overflow: 'hidden',
+  },
+  card: {
+    padding: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 16,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 5,
       },
     }),
   },
-  pressed: { opacity: 0.8 },
+  pressed: {
+    opacity: 0.85,
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 8,
+    color: '#f8fafc',
+    marginBottom: 10,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   badge: {
-    backgroundColor: '#e2e8f0',
+    borderRadius: 10,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 6,
+  },
+  badgeText: {
     fontSize: 14,
-    color: '#334155',
+    color: '#ffffff',
+    fontWeight: '600',
   },
   phone: {
-    fontSize: 14,
     marginTop: 6,
-    color: '#475569',
+    fontSize: 14,
+    color: '#e2e8f0',
   },
   emptyText: {
     textAlign: 'center',
-    marginTop: 24,
+    marginTop: 40,
     fontSize: 16,
-    color: '#888',
+    color: '#94a3b8',
   },
-}); 
+});
