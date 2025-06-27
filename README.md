@@ -1,50 +1,96 @@
-# Welcome to your Expo app 👋
+# JobFinderApp – DevOps Intern Assignment
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This repository contains a Dockerized React Native Web application, deployed on AWS EC2 as part of the DevOps Intern assignment.
+Title: Dockerize and Deploy a Web App on AWS EC2 with Basic Automation
 
-## Get started
+Objective:To evaluate your ability to use AWS for infrastructure provisioning and app deployment usingDevOps principles.
 
-1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+🧾 Features Covered
+1)Setup and GitHub Repo
+2)Dockerize the Application
+3)Docker build and local run verified
+4)Launch and Configure AWS EC2
+5)Used IAM role to enable S3 access from EC2
+6)cloud-init 
+7)Created `deploy.sh` script to automate manual setup
 
-2. Start the app
 
-   ```bash
-   npx expo start
-   ```
+Dockerfile
 
-In the output, you'll find options to open the app in a
+```Dockerfile
+FROM node:18
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+WORKDIR /app
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+COPY package*.json ./
+RUN npm install -g expo-cli && npm install
 
-## Get a fresh project
+COPY . .
 
-When you're ready, run:
+EXPOSE 8081
+CMD ["npx", "expo", "start", "--web"]
 
-```bash
-npm run reset-project
-```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+Build the image:
 
-To learn more about developing your project with Expo, look at the following resources:
+docker build -t jobfinderapp .
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Join the community
 
-Join our community of developers creating universal apps.
+Run the container:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+docker run -p 8081:8081 jobfinderapp
+
+
+
+Open in browser:
+
+http://localhost:8081
+
+ Launch on AWS EC2
+- Instance Details
+AMI: Ubuntu Server 22.04 (Free tier eligible)
+Instance Type: t3.micro
+Key pair: jobfinder-key.pem
+
+
+
+-Steps to Deploy on EC2
+
+SSH into the EC2 instance:
+
+ssh -i "jobfinder-key.pem" ubuntu@13.60.229.47
+
+
+
+Clone the repo:
+
+git clone https://github.com/mmohana27/JobFinderApp.git
+cd JobFinderApp
+
+
+
+Build Docker image:
+
+sudo docker build -t jobfinderapp .
+
+Run Docker container:
+
+sudo docker run -d -p 80:8081 jobfinderapp
+
+Visited  app at:
+
+http://@13.60.229.47
+
+
+⚙️ Bonus Features
+🟢 IAM Role for S3 Access
+Created IAM Role EC2S3AccessRole with AmazonS3ReadOnlyAccess
+Attached it to EC2
+
+
+🟡 cloud-init Automation
+
+🟣 deploy.sh Script

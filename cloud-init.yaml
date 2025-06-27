@@ -1,0 +1,10 @@
+package_update: true
+packages:
+  - docker.io
+runcmd:
+  - systemctl start docker
+  - systemctl enable docker
+  - git clone https://github.com/mmohana27/JobFinderApp.git
+  - cd JobFinderApp
+  - docker build -t jobfinderapp .
+  - docker run -d -p 80:8081 jobfinderapp
