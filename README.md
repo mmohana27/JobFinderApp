@@ -1,4 +1,4 @@
-# JobFinderApp – DevOps Intern Assignment
+# JobFinderApp 
 
 This repository contains a Dockerized React Native Web application, deployed on AWS EC2 as part of the DevOps Intern assignment.
 Title: Dockerize and Deploy a Web App on AWS EC2 with Basic Automation
